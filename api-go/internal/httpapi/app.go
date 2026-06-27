@@ -10,6 +10,7 @@ import (
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/rotation"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/validation"
 	"github.com/gofiber/fiber/v2"
+	fibercors "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 type analyzeRequest struct {
@@ -40,6 +41,8 @@ func NewApp(dependencies AppDependencies) *fiber.App {
 			return writeError(ctx, fiber.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "Unexpected server error", nil)
 		},
 	})
+
+	app.Use(fibercors.New())
 
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(fiber.Map{

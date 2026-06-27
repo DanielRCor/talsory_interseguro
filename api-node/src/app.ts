@@ -1,3 +1,4 @@
+import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "./errors";
@@ -28,6 +29,7 @@ export function createApp(options?: AppOptions) {
   const app = express();
   const resolvedOptions = resolveOptions(options);
 
+  app.use(cors());
   app.use(express.json());
 
   app.get("/health", (_request, response) => {

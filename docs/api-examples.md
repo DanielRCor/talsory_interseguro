@@ -1,5 +1,21 @@
 # API Examples
 
+## Frontend
+
+Run the optional browser client locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```txt
+http://localhost:5173
+```
+
 ## Go API Health
 
 ```bash

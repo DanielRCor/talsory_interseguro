@@ -5,7 +5,9 @@
 - `cd api-node && npm test`
 - `cd api-node && npm run build`
 - `cd api-go && go test ./...`
+- `cd frontend && npm run build`
 - Local end-to-end run with Node on `:3000` and Go on `:8080`
+- Browser-based end-to-end run from the frontend on `:5173`
 - `docker compose up --build -d`
 
 ## Results
@@ -13,7 +15,9 @@
 - Node tests: passed
 - Node TypeScript build: passed
 - Go tests: passed
+- Frontend build: passed
 - Local end-to-end HTTP integration: passed
+- Frontend browser integration: passed
 - Docker Compose: could not be validated because the Docker Desktop Linux engine was not running (`open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`)
 
 ## Coverage Summary
@@ -27,6 +31,7 @@
 - Go HTTP success, validation failure, and Node downstream failure handling
 - Go HTTP JWT enforcement behavior
 - Local Go -> Node integration with a real `POST /api/v1/qr/analyze` request
+- Frontend rendering, health probes, and QR action flow against the live local APIs
 
 ## Bugs Found and Corrected During Implementation
 
@@ -34,6 +39,7 @@
 2. The local Codex session did not inherit the updated Go `PATH`, so the absolute Go binary path was used.
 3. TypeScript 6 raised a deprecation warning for module resolution, so `ignoreDeprecations` was added to keep builds green.
 4. The first counterclockwise rotation implementation wrote into uninitialized rows, which caused a panic in Go tests and was corrected by preallocating the rotated matrix.
+5. Browser-based frontend requests needed CORS support, so permissive demo-friendly middleware was added to both APIs.
 
 ## Remaining Risks
 

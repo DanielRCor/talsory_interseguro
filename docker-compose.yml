@@ -1,4 +1,15 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      FRONTEND_PORT: ${FRONTEND_PORT:-5173}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      - api-go
+      - api-node
+
   api-node:
     build:
       context: ./api-node

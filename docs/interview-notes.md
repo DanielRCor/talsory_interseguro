@@ -6,6 +6,7 @@ Two decoupled APIs:
 
 - Go/Fiber API for QR factorization and orchestration.
 - Node/Express API for matrix statistics.
+- Optional Vite frontend for local demo and interviewer walkthroughs.
 
 ## Why Go Does QR
 
@@ -46,3 +47,4 @@ QR factorization was prioritized because it is the explicit and technically conc
 
 - JWT auth can be enabled on both services with `ENABLE_AUTH=true`.
 - A matrix rotation endpoint was added in Go to cover the ambiguous “rotation” mention without replacing QR as the primary operation.
+- A lightweight frontend was added to make the end-to-end behavior easier to demonstrate without Postman or curl.

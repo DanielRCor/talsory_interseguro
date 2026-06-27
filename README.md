@@ -4,11 +4,13 @@ This repository implements the Interseguro coding challenge with two small backe
 
 - `api-go`: Go + Fiber API that validates an input matrix, computes a reduced QR factorization with Modified Gram-Schmidt, calls the Node API over HTTP, and returns the combined result.
 - `api-node`: Node.js + Express + TypeScript API that receives the `Q` and `R` matrices and computes aggregate statistics.
+- `frontend`: Vite + TypeScript browser client for driving the APIs locally.
 
 Optional extensions implemented:
 
 - JWT protection for `/api/v1/*` routes in both services when `ENABLE_AUTH=true`
 - Matrix rotation helper endpoint in the Go API: `POST /api/v1/matrix/rotate`
+- Optional frontend to exercise QR, rotation, health checks, and JWT-protected requests
 
 ## Architecture
 
@@ -28,6 +30,7 @@ Client
 - Express 5
 - TypeScript
 - Jest + Supertest
+- Vite
 - Docker + Docker Compose
 
 ## Prerequisites
@@ -72,6 +75,19 @@ go run ./cmd/server
 
 By default the Go API expects the Node API at `http://localhost:3000`.
 
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run build
+npm run dev
+```
+
+Frontend URL:
+
+- Frontend: `http://localhost:5173`
+
 ## Docker Run
 
 ```bash
@@ -80,6 +96,7 @@ docker compose up --build
 
 Services:
 
+- Frontend: `http://localhost:5173`
 - Go API: `http://localhost:8080`
 - Node API: `http://localhost:3000`
 
@@ -88,6 +105,7 @@ Services:
 ```bash
 cd api-node && npm test
 cd api-go && go test ./...
+cd frontend && npm run build
 ```
 
 ## Example Requests
@@ -95,6 +113,7 @@ cd api-go && go test ./...
 ### Health checks
 
 ```bash
+curl http://localhost:5173
 curl http://localhost:8080/health
 curl http://localhost:3000/health
 ```
@@ -152,3 +171,4 @@ curl -X POST http://localhost:8080/api/v1/qr/analyze \
 - [API examples](C:/Users/theda/Documents/talsory_interseguro/repo/docs/api-examples.md)
 - [Deployment plan](C:/Users/theda/Documents/talsory_interseguro/repo/docs/deployment-plan.md)
 - [Interview notes](C:/Users/theda/Documents/talsory_interseguro/repo/docs/interview-notes.md)
+- [Quality report](C:/Users/theda/Documents/talsory_interseguro/repo/docs/quality-report.md)
