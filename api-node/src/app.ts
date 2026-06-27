@@ -32,6 +32,17 @@ export function createApp(options?: AppOptions) {
   app.use(cors());
   app.use(express.json());
 
+  app.get("/", (_request, response) => {
+    response.json({
+      service: "node-statistics-api",
+      status: "ok",
+      routes: {
+        health: "/health",
+        statistics: "/api/v1/statistics",
+      },
+    });
+  });
+
   app.get("/health", (_request, response) => {
     response.json({
       status: "ok",

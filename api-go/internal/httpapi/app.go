@@ -39,11 +39,28 @@ type AppDependencies struct {
 func NewApp(dependencies AppDependencies) *fiber.App {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			if fiberError, ok := err.(*fiber.Error); ok {
+				return writeError(ctx, fiberError.Code, "HTTP_ERROR", fiberError.Message, nil)
+			}
 			return writeError(ctx, fiber.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "Unexpected server error", nil)
 		},
 	})
 
 	app.Use(fibercors.New())
+
+	app.Get("/", func(ctx *fiber.Ctx) error {
+		return ctx.JSON(fiber.Map{
+			"service": "go-qr-api",
+			"status":  "ok",
+			"routes": fiber.Map{
+				"health":          "/health",
+				"demoToken":       "/auth/demo-token",
+				"qrAnalyze":       "/api/v1/qr/analyze",
+				"matrixRotate":    "/api/v1/matrix/rotate",
+				"statisticsProxy": "api-go -> api-node",
+			},
+		})
+	})
 
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(fiber.Map{

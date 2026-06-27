@@ -23,8 +23,43 @@ type ApiError = {
   };
 };
 
-const goApiBase = import.meta.env.VITE_GO_API_BASE ?? "http://localhost:8080";
-const nodeApiBase = import.meta.env.VITE_NODE_API_BASE ?? "http://localhost:3000";
+function resolveRenderServiceURL(serviceName: string): string | null {
+  const hostname = window.location.hostname;
+  if (!hostname.endsWith(".onrender.com")) {
+    return null;
+  }
+
+  const serviceHostname = hostname.replace("frontend.onrender.com", `${serviceName}.onrender.com`);
+  if (serviceHostname === hostname) {
+    return null;
+  }
+
+  return `https://${serviceHostname}`;
+}
+
+function resolveApiBase(envValue: string | undefined, localFallback: string, renderServiceName: string): string {
+  if (envValue && envValue.trim() !== "") {
+    return envValue;
+  }
+
+  const renderURL = resolveRenderServiceURL(renderServiceName);
+  if (renderURL) {
+    return renderURL;
+  }
+
+  return localFallback;
+}
+
+const goApiBase = resolveApiBase(
+  import.meta.env.VITE_GO_API_BASE,
+  "http://localhost:8080",
+  "api-go",
+);
+const nodeApiBase = resolveApiBase(
+  import.meta.env.VITE_NODE_API_BASE,
+  "http://localhost:3000",
+  "api-node",
+);
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
