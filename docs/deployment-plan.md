@@ -1,68 +1,93 @@
 # Deployment Plan
 
-## Rule
+## Estado
 
-No real deployment was executed. This file only prepares the manual path.
+No se ejecuto un despliegue real desde este entorno. El repositorio quedo preparado para desplegarse en Render con Blueprint.
 
-## Recommended Order
+## Plataforma elegida
 
-1. Deploy `api-node`.
-2. Validate `GET /health`.
-3. Copy the public Node URL.
-4. Deploy `api-go` with `NODE_API_URL` pointing to the deployed Node API.
-5. Validate `GET /health`.
-6. Validate `POST /api/v1/qr/analyze`.
+Render.
 
-## Environment Variables
+Motivo:
 
-### Go API
+- acepta el repo actual sin reestructurarlo
+- soporta Docker para `api-go` y `api-node`
+- permite publicar el frontend como static site
+- deja todo definido en un solo archivo `render.yaml`
 
-```env
-PORT=8080
-GO_API_PORT=8080
-NODE_API_URL=https://your-node-service-url
-HTTP_CLIENT_TIMEOUT_MS=3000
-ENABLE_AUTH=false
-JWT_SECRET=change-me
-```
+## Servicios a crear
 
-### Node API
+El archivo [render.yaml](C:/Users/theda/Documents/talsory_interseguro/repo/render.yaml) define:
 
-```env
-PORT=3000
-NODE_API_PORT=3000
-ENABLE_AUTH=false
-JWT_SECRET=change-me
-```
+1. `talsory-interseguro-api-node`
+2. `talsory-interseguro-api-go`
+3. `talsory-interseguro-frontend`
 
-## Platform Options Without Railway
+## Como desplegarlo en Render
 
-### Render
+1. Entra a Render.
+2. Conecta tu cuenta de GitHub si aun no lo hiciste.
+3. Haz clic en `New > Blueprint`.
+4. Selecciona el repositorio `DanielRCor/talsory_interseguro`.
+5. Usa la rama `main`.
+6. Confirma que Render detecte `render.yaml`.
+7. Revisa los 3 servicios que se van a crear.
+8. Haz clic en `Deploy Blueprint`.
 
-- Good fit for Docker-based web services.
-- Straightforward service-per-container setup.
-- Risk: free-tier cold starts or quota constraints depending on current plan availability.
+## Configuracion clave
 
-### Fly.io
+### api-node
 
-- Good fit for containerized apps and private service-to-service networking.
-- Risk: operational concepts are slightly more involved than Render for beginners.
+- runtime: Docker
+- plan: free
+- health check: `/health`
+- auth: activada
+- `JWT_SECRET`: generado por Render
 
-### Google Cloud Run
+### api-go
 
-- Good fit for stateless containers with HTTP health checks.
-- Risk: requires more cloud setup and IAM familiarity than the simpler developer platforms.
+- runtime: Docker
+- plan: free
+- health check: `/health`
+- auth: activada
+- `NODE_API_URL`: toma automaticamente la URL publica de `api-node`
+- `JWT_SECRET`: reutiliza el mismo secreto de `api-node`
 
-### Vercel
+### frontend
 
-- Not the preferred choice for this challenge because the requirement is centered on two Dockerized backend services.
-- Could be considered only if the architecture is adapted away from the original Docker-first expectation.
+- runtime: static site
+- build: `npm ci && npm run build`
+- salida: `dist`
+- `VITE_GO_API_BASE`: toma automaticamente la URL publica de `api-go`
+- `VITE_NODE_API_BASE`: toma automaticamente la URL publica de `api-node`
 
-## Manual Checklist Before Deployment
+## Verificacion despues del deploy
 
-- Tests pass locally.
-- `docker compose up --build` works locally.
-- `.env.example` is complete.
-- No real secrets are committed.
-- README and examples are up to date.
-- User explicitly approves any real deployment.
+1. Abrir la URL del frontend en Render.
+2. Verificar que las tarjetas de salud respondan.
+3. Generar un JWT demo.
+4. Ejecutar el flujo `QR + Estadisticas`.
+5. Probar la rotacion.
+
+## Limitaciones del free tier
+
+- Los web services free pueden entrar en reposo despues de 15 minutos sin trafico.
+- El primer request despues de ese reposo puede tardar cerca de 1 minuto.
+- Render da 750 horas gratis al mes por workspace para web services free.
+
+## Si algo falla
+
+- Revisar logs de `api-node` primero.
+- Luego revisar logs de `api-go`.
+- Si el frontend carga pero falla el flujo, normalmente el problema sera:
+  - servicio dormido
+  - variable de entorno mal resuelta
+  - primer deploy aun no terminado
+
+## Pendiente despues del despliegue
+
+Despues de que Render lo publique, lo siguiente seria:
+
+1. validar el flujo con la URL real
+2. agregar dominio custom si quieres una entrega mas pulida
+3. dejar una demo grabada corta como respaldo para entrevista

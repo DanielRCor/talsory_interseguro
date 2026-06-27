@@ -132,6 +132,30 @@ cd api-node && npm test
 cd frontend && npm run build
 ```
 
+## Despliegue en Render
+
+El repo ya incluye [render.yaml](C:/Users/theda/Documents/talsory_interseguro/repo/render.yaml) para crear los 3 servicios:
+
+- `talsory-interseguro-api-node`
+- `talsory-interseguro-api-go`
+- `talsory-interseguro-frontend`
+
+Pasos:
+
+1. En Render, conecta este repositorio de GitHub.
+2. Elige `New > Blueprint`.
+3. Selecciona la rama `main`.
+4. Confirma el archivo `render.yaml`.
+5. Lanza el deploy.
+
+Notas importantes:
+
+- El frontend quedara como sitio estatico.
+- Las dos APIs quedaran como web services free.
+- `api-go` usara automaticamente la URL publica de `api-node`.
+- El frontend usara automaticamente las URLs publicas de ambas APIs.
+- En free tier, los servicios web pueden dormir si no reciben trafico por 15 minutos.
+
 ## Guia corta para reclutadores
 
 Este proyecto busca mostrar tres cosas:

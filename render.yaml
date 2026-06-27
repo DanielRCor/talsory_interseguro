@@ -1,0 +1,60 @@
+services:
+  - type: web
+    name: talsory-interseguro-api-node
+    runtime: docker
+    plan: free
+    dockerContext: ./api-node
+    dockerfilePath: ./api-node/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENABLE_AUTH
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: talsory-interseguro-api-go
+    runtime: docker
+    plan: free
+    dockerContext: ./api-go
+    dockerfilePath: ./api-go/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENABLE_AUTH
+        value: "true"
+      - key: HTTP_CLIENT_TIMEOUT_MS
+        value: "3000"
+      - key: NODE_API_URL
+        fromService:
+          type: web
+          name: talsory-interseguro-api-node
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: talsory-interseguro-api-node
+          envVarKey: JWT_SECRET
+
+  - type: web
+    name: talsory-interseguro-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_GO_API_BASE
+        fromService:
+          type: web
+          name: talsory-interseguro-api-go
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VITE_NODE_API_BASE
+        fromService:
+          type: web
+          name: talsory-interseguro-api-node
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
