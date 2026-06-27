@@ -20,9 +20,12 @@
 
 - Node statistics calculations for normal, diagonal, decimal, negative, and invalid inputs
 - Node HTTP health and validation behavior
+- Node HTTP JWT enforcement behavior
 - Go matrix validation rules
 - Go QR orthogonality, reconstruction, and triangularity
+- Go matrix rotation behavior
 - Go HTTP success, validation failure, and Node downstream failure handling
+- Go HTTP JWT enforcement behavior
 - Local Go -> Node integration with a real `POST /api/v1/qr/analyze` request
 
 ## Bugs Found and Corrected During Implementation
@@ -30,9 +33,10 @@
 1. PowerShell execution policy blocked `npm.ps1`, so `npm.cmd` was used consistently.
 2. The local Codex session did not inherit the updated Go `PATH`, so the absolute Go binary path was used.
 3. TypeScript 6 raised a deprecation warning for module resolution, so `ignoreDeprecations` was added to keep builds green.
+4. The first counterclockwise rotation implementation wrote into uninitialized rows, which caused a panic in Go tests and was corrected by preallocating the rotated matrix.
 
 ## Remaining Risks
 
 - The Node dependency tree reports moderate audit findings from transitive dev dependencies.
 - The QR implementation rejects rank-deficient matrices instead of computing a more advanced decomposition.
-- JWT authentication was intentionally not enabled because it was optional and outside the core delivery scope.
+- JWT is implemented but disabled by default to keep local startup simple.

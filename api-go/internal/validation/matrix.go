@@ -13,7 +13,7 @@ func (e ValidationError) Error() string {
 	return "matrix validation failed"
 }
 
-func ValidateMatrix(matrix [][]float64) error {
+func ValidateRectangularMatrix(matrix [][]float64) error {
 	if len(matrix) == 0 {
 		return ValidationError{Details: []string{"matrix must not be empty"}}
 	}
@@ -42,12 +42,22 @@ func ValidateMatrix(matrix [][]float64) error {
 		}
 	}
 
-	if len(matrix) < expectedColumns {
-		details = append(details, fmt.Sprintf("matrix must satisfy rows >= columns, got %d rows and %d columns", len(matrix), expectedColumns))
-	}
-
 	if len(details) > 0 {
 		return ValidationError{Details: details}
+	}
+
+	return nil
+}
+
+func ValidateQRMatrix(matrix [][]float64) error {
+	if err := ValidateRectangularMatrix(matrix); err != nil {
+		return err
+	}
+
+	if len(matrix) < len(matrix[0]) {
+		return ValidationError{Details: []string{
+			fmt.Sprintf("matrix must satisfy rows >= columns, got %d rows and %d columns", len(matrix), len(matrix[0])),
+		}}
 	}
 
 	return nil

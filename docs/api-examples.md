@@ -82,6 +82,46 @@ Response shape:
 
 Exact matrix values vary with floating-point output.
 
+## Optional Rotation Endpoint
+
+```bash
+curl -X POST http://localhost:8080/api/v1/matrix/rotate \
+  -H "Content-Type: application/json" \
+  -d '{"matrix":[[1,2,3],[4,5,6]],"direction":"counterclockwise"}'
+```
+
+```json
+{
+  "input": {
+    "rows": 2,
+    "columns": 3
+  },
+  "operation": "counterclockwise",
+  "result": [
+    [3, 6],
+    [2, 5],
+    [1, 4]
+  ]
+}
+```
+
+## Optional JWT Example
+
+Generate a local token:
+
+```bash
+node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'demo-user'}, 'change-me-only-if-auth-enabled', {algorithm:'HS256'}))"
+```
+
+Use it against either protected API when `ENABLE_AUTH=true`:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/statistics \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"matrices":{"q":[[1]],"r":[[2]]}}'
+```
+
 ## Common Error Example
 
 ```bash

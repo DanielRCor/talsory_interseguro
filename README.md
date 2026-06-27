@@ -5,6 +5,11 @@ This repository implements the Interseguro coding challenge with two small backe
 - `api-go`: Go + Fiber API that validates an input matrix, computes a reduced QR factorization with Modified Gram-Schmidt, calls the Node API over HTTP, and returns the combined result.
 - `api-node`: Node.js + Express + TypeScript API that receives the `Q` and `R` matrices and computes aggregate statistics.
 
+Optional extensions implemented:
+
+- JWT protection for `/api/v1/*` routes in both services when `ENABLE_AUTH=true`
+- Matrix rotation helper endpoint in the Go API: `POST /api/v1/matrix/rotate`
+
 ## Architecture
 
 ```txt
@@ -102,6 +107,31 @@ curl -X POST http://localhost:8080/api/v1/qr/analyze \
   -d '{"matrix":[[1,2],[3,4],[5,6]]}'
 ```
 
+### Optional rotation endpoint
+
+```bash
+curl -X POST http://localhost:8080/api/v1/matrix/rotate \
+  -H "Content-Type: application/json" \
+  -d '{"matrix":[[1,2,3],[4,5,6]],"direction":"counterclockwise"}'
+```
+
+### Optional JWT flow
+
+Generate a local test token:
+
+```bash
+node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'demo-user'}, 'change-me-only-if-auth-enabled', {algorithm:'HS256'}))"
+```
+
+Then call protected routes with:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/qr/analyze \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"matrix":[[1,2],[3,4],[5,6]]}'
+```
+
 ## Technical Decisions
 
 - Two APIs are kept separate because the challenge explicitly asks for one Go API and one Node API communicating via HTTP.
@@ -114,7 +144,7 @@ curl -X POST http://localhost:8080/api/v1/qr/analyze \
 
 - The QR implementation only supports matrices with `rows >= columns`.
 - Linearly dependent columns are rejected instead of using a rank-deficient decomposition strategy.
-- JWT was intentionally left disabled because it was optional and the core backend scope was prioritized.
+- JWT is implemented but disabled by default to preserve the simple local developer flow.
 
 ## Documentation
 

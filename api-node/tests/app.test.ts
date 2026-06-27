@@ -1,4 +1,5 @@
 import request from "supertest";
+import jwt from "jsonwebtoken";
 import { createApp } from "../src/app";
 
 describe("node-statistics-api", () => {
@@ -49,5 +50,39 @@ describe("node-statistics-api", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("requires jwt when auth is enabled", async () => {
+    const securedApp = createApp({ enableAuth: true, jwtSecret: "test-secret" });
+
+    const response = await request(securedApp)
+      .post("/api/v1/statistics")
+      .send({
+        matrices: {
+          q: [[1]],
+          r: [[2]],
+        },
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("accepts a valid jwt when auth is enabled", async () => {
+    const securedApp = createApp({ enableAuth: true, jwtSecret: "test-secret" });
+    const token = jwt.sign({ sub: "test-user" }, "test-secret", { algorithm: "HS256" });
+
+    const response = await request(securedApp)
+      .post("/api/v1/statistics")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        matrices: {
+          q: [[1]],
+          r: [[2]],
+        },
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.sum).toBe(3);
   });
 });

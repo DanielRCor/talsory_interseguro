@@ -41,3 +41,8 @@ QR factorization was prioritized because it is the explicit and technically conc
 - Unit tests for Go QR properties and validation.
 - HTTP tests for the Go API handler.
 - Docker setup for full local execution.
+
+## Optional Features Added
+
+- JWT auth can be enabled on both services with `ENABLE_AUTH=true`.
+- A matrix rotation endpoint was added in Go to cover the ambiguous “rotation” mention without replacing QR as the primary operation.

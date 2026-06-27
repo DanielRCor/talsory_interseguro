@@ -7,12 +7,18 @@ import (
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/client"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/config"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/qr"
+	"github.com/DanielRCor/talsory_interseguro/api-go/internal/rotation"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
 type analyzeRequest struct {
 	Matrix [][]float64 `json:"matrix"`
+}
+
+type rotateRequest struct {
+	Matrix    [][]float64 `json:"matrix"`
+	Direction string      `json:"direction"`
 }
 
 type errorResponse struct {
@@ -42,13 +48,18 @@ func NewApp(dependencies AppDependencies) *fiber.App {
 		})
 	})
 
-	app.Post("/api/v1/qr/analyze", func(ctx *fiber.Ctx) error {
+	api := app.Group("/api/v1")
+	if dependencies.Config.EnableAuth {
+		api.Use(authMiddleware(dependencies.Config))
+	}
+
+	api.Post("/qr/analyze", func(ctx *fiber.Ctx) error {
 		var request analyzeRequest
 		if err := ctx.BodyParser(&request); err != nil {
 			return writeError(ctx, fiber.StatusBadRequest, "BAD_REQUEST", "Invalid JSON payload", []string{err.Error()})
 		}
 
-		if err := validation.ValidateMatrix(request.Matrix); err != nil {
+		if err := validation.ValidateQRMatrix(request.Matrix); err != nil {
 			validationError, ok := err.(validation.ValidationError)
 			if ok {
 				return writeError(ctx, fiber.StatusUnprocessableEntity, "VALIDATION_ERROR", "Matrix validation failed", validationError.Details)
@@ -80,6 +91,35 @@ func NewApp(dependencies AppDependencies) *fiber.App {
 				"algorithm": dependencies.Config.Algorithm,
 				"tolerance": dependencies.Config.Tolerance,
 			},
+		})
+	})
+
+	api.Post("/matrix/rotate", func(ctx *fiber.Ctx) error {
+		var request rotateRequest
+		if err := ctx.BodyParser(&request); err != nil {
+			return writeError(ctx, fiber.StatusBadRequest, "BAD_REQUEST", "Invalid JSON payload", []string{err.Error()})
+		}
+
+		if err := validation.ValidateRectangularMatrix(request.Matrix); err != nil {
+			validationError, ok := err.(validation.ValidationError)
+			if ok {
+				return writeError(ctx, fiber.StatusUnprocessableEntity, "VALIDATION_ERROR", "Matrix validation failed", validationError.Details)
+			}
+			return writeError(ctx, fiber.StatusUnprocessableEntity, "VALIDATION_ERROR", err.Error(), nil)
+		}
+
+		rotated, direction, err := rotation.Rotate(request.Matrix, request.Direction)
+		if err != nil {
+			return writeError(ctx, fiber.StatusUnprocessableEntity, "VALIDATION_ERROR", err.Error(), nil)
+		}
+
+		return ctx.JSON(fiber.Map{
+			"input": fiber.Map{
+				"rows":    len(request.Matrix),
+				"columns": len(request.Matrix[0]),
+			},
+			"operation": direction,
+			"result":    rotated,
 		})
 	})
 

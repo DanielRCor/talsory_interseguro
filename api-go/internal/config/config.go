@@ -20,6 +20,8 @@ type Config struct {
 	HTTPClientTimeout time.Duration
 	Algorithm         string
 	Tolerance         float64
+	EnableAuth        bool
+	JWTSecret         string
 }
 
 func Load() Config {
@@ -43,11 +45,19 @@ func Load() Config {
 		nodeAPIURL = defaultNodeAPIURL
 	}
 
+	enableAuth := os.Getenv("ENABLE_AUTH") == "true"
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "change-me-only-if-auth-enabled"
+	}
+
 	return Config{
 		Port:              port,
 		NodeAPIURL:        nodeAPIURL,
 		HTTPClientTimeout: time.Duration(timeoutMS) * time.Millisecond,
 		Algorithm:         defaultAlgorithm,
 		Tolerance:         defaultNumericTolerance,
+		EnableAuth:        enableAuth,
+		JWTSecret:         jwtSecret,
 	}
 }

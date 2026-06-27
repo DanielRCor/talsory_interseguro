@@ -2,7 +2,7 @@ package validation
 
 import "testing"
 
-func TestValidateMatrix(t *testing.T) {
+func TestValidateRectangularMatrix(t *testing.T) {
 	tests := []struct {
 		name    string
 		matrix  [][]float64
@@ -30,18 +30,17 @@ func TestValidateMatrix(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "rows less than columns",
+			name: "rows less than columns is still rectangular",
 			matrix: [][]float64{
 				{1, 2, 3},
 				{4, 5, 6},
 			},
-			wantErr: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := ValidateMatrix(test.matrix)
+			err := ValidateRectangularMatrix(test.matrix)
 			if test.wantErr && err == nil {
 				t.Fatalf("expected error but got nil")
 			}
@@ -49,5 +48,16 @@ func TestValidateMatrix(t *testing.T) {
 				t.Fatalf("expected nil error but got %v", err)
 			}
 		})
+	}
+}
+
+func TestValidateQRMatrix(t *testing.T) {
+	err := ValidateQRMatrix([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+
+	if err == nil {
+		t.Fatalf("expected error but got nil")
 	}
 }
