@@ -1,179 +1,156 @@
 # Talsory Interseguro Challenge
 
-This repository implements the Interseguro coding challenge with two small backend services:
+Implementacion de una prueba tecnica con dos APIs y un frontend simple para probar el flujo completo.
 
-- `api-go`: Go + Fiber API that validates an input matrix, computes a reduced QR factorization with Modified Gram-Schmidt, calls the Node API over HTTP, and returns the combined result.
-- `api-node`: Node.js + Express + TypeScript API that receives the `Q` and `R` matrices and computes aggregate statistics.
-- `frontend`: Vite + TypeScript browser client for driving the APIs locally.
+- `api-go`: recibe una matriz, valida la entrada, calcula la factorizacion QR y orquesta la respuesta final.
+- `api-node`: recibe las matrices `Q` y `R` y calcula estadisticas.
+- `frontend`: interfaz web para probar QR, rotacion, health checks y autenticacion JWT.
 
-Optional extensions implemented:
+## Flujo del proyecto
 
-- JWT protection for `/api/v1/*` routes in both services, enabled by default
-- Matrix rotation helper endpoint in the Go API: `POST /api/v1/matrix/rotate`
-- Optional frontend to exercise QR, rotation, health checks, and JWT-protected requests
+1. El usuario envia una matriz desde el frontend.
+2. La API en Go calcula la factorizacion QR.
+3. La API en Go llama por HTTP a la API en Node.
+4. La API en Node devuelve estadisticas sobre `Q` y `R`.
+5. La API en Go responde con todo el resultado consolidado.
 
-## Architecture
+## Stack
 
-```txt
-Client
-  -> Go API (`POST /api/v1/qr/analyze`)
-    -> QR factorization
-    -> HTTP call to Node API (`POST /api/v1/statistics`)
-  -> Combined JSON response
-```
-
-## Technologies
-
-- Go 1.26
-- Fiber v2
-- Node.js 22
-- Express 5
-- TypeScript
-- Jest + Supertest
-- Vite
+- Go + Fiber
+- Node.js + Express + TypeScript
+- Vite + TypeScript
 - Docker + Docker Compose
 
-## Prerequisites
+## Como levantarlo
 
-- Go 1.26+
-- Node.js 22+
-- npm
-- Docker Desktop / Docker Engine with Compose
+### Opcion 1: Docker
 
-## Environment Variables
+Es la forma mas rapida de levantar todo junto.
 
-Copy values from `.env.example` if you want to override defaults.
+1. Abre Docker Desktop y verifica que diga `Engine running`.
+2. En la raiz del repo ejecuta:
+
+```bash
+docker compose up --build
+```
+
+Servicios disponibles:
+
+- Frontend: `http://localhost:5173`
+- API Go: `http://localhost:8080`
+- API Node: `http://localhost:3000`
+
+Si algun puerto ya esta ocupado, primero cierra los procesos locales que esten usando `5173`, `8080` o `3000`.
+
+### Opcion 2: Manual
+
+Si prefieres correr cada servicio por separado:
+
+```bash
+cd api-node
+npm install
+npm run dev
+```
+
+```bash
+cd api-go
+go run ./cmd/server
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Variables de entorno
+
+Si quieres replicar la configuracion local recomendada, crea un archivo `.env` en la raiz usando como base `.env.example`.
+
+Valores principales:
 
 ```env
 GO_API_PORT=8080
 NODE_API_PORT=3000
+FRONTEND_PORT=5173
 NODE_API_URL=http://api-node:3000
 HTTP_CLIENT_TIMEOUT_MS=3000
 ENABLE_AUTH=true
 JWT_SECRET=change-me-only-if-auth-enabled
 ```
 
-## Local Run
+## Autenticacion JWT
 
-### Node API
+Las rutas principales pueden protegerse con JWT cuando `ENABLE_AUTH=true`.
+
+Para no depender de un proveedor externo, el proyecto expone un endpoint local de apoyo:
 
 ```bash
-cd api-node
-npm install
-npm test
-npm run build
-npm run dev
+POST /auth/demo-token
 ```
 
-### Go API
+Ese endpoint genera un token de prueba con expiracion corta para usar el frontend o probar las rutas protegidas.
+
+## Endpoints principales
 
 ```bash
-cd api-go
-go test ./...
-go run ./cmd/server
+GET  /health
+POST /auth/demo-token
+POST /api/v1/qr/analyze
+POST /api/v1/matrix/rotate
+POST /api/v1/statistics
 ```
 
-By default the Go API expects the Node API at `http://localhost:3000`.
+## Ejemplos rapidos
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run build
-npm run dev
-```
-
-Frontend URL:
-
-- Frontend: `http://localhost:5173`
-
-The frontend includes a `Generate Demo JWT` button that requests a local token from the Go API and fills the JWT field automatically.
-That demo token now expires after 2 minutes.
-
-## Docker Run
+### Health check
 
 ```bash
-docker compose up --build
-```
-
-Services:
-
-- Frontend: `http://localhost:5173`
-- Go API: `http://localhost:8080`
-- Node API: `http://localhost:3000`
-
-## Tests
-
-```bash
-cd api-node && npm test
-cd api-go && go test ./...
-cd frontend && npm run build
-```
-
-## Example Requests
-
-### Health checks
-
-```bash
-curl http://localhost:5173
 curl http://localhost:8080/health
 curl http://localhost:3000/health
 ```
 
-### End-to-end QR analysis
+### Analisis QR
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/qr/analyze \
   -H "Content-Type: application/json" \
-  -d '{"matrix":[[1,2],[3,4],[5,6]]}'
+  -d "{\"matrix\":[[1,2],[3,4],[5,6]]}"
 ```
 
-### Optional rotation endpoint
-
-```bash
-curl -X POST http://localhost:8080/api/v1/matrix/rotate \
-  -H "Content-Type: application/json" \
-  -d '{"matrix":[[1,2,3],[4,5,6]],"direction":"counterclockwise"}'
-```
-
-### JWT flow
-
-Generate a local demo token:
+### Token demo
 
 ```bash
 curl -X POST http://localhost:8080/auth/demo-token
 ```
 
-The response includes the expiration time and the frontend shows a shorter preview instead of dumping the full token in the response panel.
-
-Then call protected routes with:
+## Pruebas
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/qr/analyze \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"matrix":[[1,2],[3,4],[5,6]]}'
+cd api-go && go test ./...
+cd api-node && npm test
+cd frontend && npm run build
 ```
 
-## Technical Decisions
+## Guia corta para reclutadores
 
-- Two APIs are kept separate because the challenge explicitly asks for one Go API and one Node API communicating via HTTP.
-- The Go API is the orchestrator because it receives the original matrix in the prompt.
-- QR factorization was prioritized over matrix rotation because the statement is more specific about QR.
-- Modified Gram-Schmidt was chosen to keep the algorithm explainable and dependency-light.
-- No database was added because the challenge does not require persistence.
+Este proyecto busca mostrar tres cosas:
 
-## Known Limitations
+- comunicacion entre servicios en tecnologias distintas
+- resolucion de un problema numerico real con Go
+- una interfaz minima para demostrar el flujo sin depender solo de Postman
 
-- The QR implementation only supports matrices with `rows >= columns`.
-- Linearly dependent columns are rejected instead of using a rank-deficient decomposition strategy.
-- JWT is enabled by default in the current local setup, so protected API routes expect a bearer token unless you explicitly set `ENABLE_AUTH=false`.
+Decisiones principales:
 
-## Documentation
+- Go actua como servicio orquestador porque recibe la matriz original y ejecuta la parte numerica.
+- Node se mantiene separado para cumplir el requerimiento de tener dos APIs comunicandose por HTTP.
+- No se agrego base de datos porque la prueba no lo necesita.
+- Se incluyo Docker para levantar todo con un solo comando.
 
-- [Preflight report](C:/Users/theda/Documents/talsory_interseguro/repo/docs/preflight-report.md)
+## Documentacion adicional
+
 - [API examples](C:/Users/theda/Documents/talsory_interseguro/repo/docs/api-examples.md)
 - [Deployment plan](C:/Users/theda/Documents/talsory_interseguro/repo/docs/deployment-plan.md)
 - [Interview notes](C:/Users/theda/Documents/talsory_interseguro/repo/docs/interview-notes.md)
+- [Preflight report](C:/Users/theda/Documents/talsory_interseguro/repo/docs/preflight-report.md)
 - [Quality report](C:/Users/theda/Documents/talsory_interseguro/repo/docs/quality-report.md)
