@@ -34,21 +34,21 @@ app.innerHTML = `
   <div class="shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Interseguro Coding Challenge</p>
-        <h1>Matrix Lab</h1>
+        <p class="eyebrow">Prueba Técnica Interseguro</p>
+        <h1>Laboratorio de Matrices</h1>
         <p class="lede">
-          A focused browser client for testing QR factorization, downstream statistics,
-          rotation, and authenticated requests without leaving localhost.
+          Cliente web para probar la factorización QR, las estadísticas, la rotación
+          y las peticiones autenticadas sin salir de localhost.
         </p>
       </div>
       <div class="hero-panel">
         <div class="status-card" data-health="go">
           <span>Go API</span>
-          <strong>Checking...</strong>
+          <strong>Verificando...</strong>
         </div>
         <div class="status-card" data-health="node">
           <span>Node API</span>
-          <strong>Checking...</strong>
+          <strong>Verificando...</strong>
         </div>
       </div>
     </header>
@@ -56,55 +56,55 @@ app.innerHTML = `
     <main class="grid">
       <section class="panel control-panel">
         <div class="panel-heading">
-          <p class="eyebrow">Request Builder</p>
-          <h2>Drive the APIs from one place</h2>
+          <p class="eyebrow">Constructor de Peticiones</p>
+          <h2>Controla las APIs desde un solo lugar</h2>
         </div>
 
         <label class="field">
-          <span>JWT token</span>
-          <input id="jwtToken" type="text" placeholder="Use Generate Demo JWT or paste your own bearer token" />
+          <span>Token JWT</span>
+          <input id="jwtToken" type="text" placeholder="Usa Generar JWT Demo o pega tu propio bearer token" />
         </label>
 
         <div class="action-grid compact">
-          <button id="generateTokenButton" class="action secondary">Generate Demo JWT</button>
+          <button id="generateTokenButton" class="action secondary">Generar JWT Demo</button>
         </div>
 
         <label class="field">
-          <span>Matrix JSON</span>
+          <span>Matriz en JSON</span>
           <textarea id="matrixInput" spellcheck="false">[[1,2],[3,4],[5,6]]</textarea>
         </label>
 
         <div class="action-grid">
-          <button id="analyzeButton" class="action primary">Run QR + Statistics</button>
-          <button id="rotateClockwiseButton" class="action secondary">Rotate Clockwise</button>
-          <button id="rotateCounterButton" class="action secondary">Rotate Counterclockwise</button>
-          <button id="refreshHealthButton" class="action ghost">Refresh Health</button>
+          <button id="analyzeButton" class="action primary">Ejecutar QR + Estadísticas</button>
+          <button id="rotateClockwiseButton" class="action secondary">Rotar a la Derecha</button>
+          <button id="rotateCounterButton" class="action secondary">Rotar a la Izquierda</button>
+          <button id="refreshHealthButton" class="action ghost">Actualizar Estado</button>
         </div>
 
         <p class="hint">
-          QR requires <code>rows &gt;= columns</code>. Rotation accepts any rectangular matrix.
+          QR requiere <code>filas &gt;= columnas</code>. La rotación acepta cualquier matriz rectangular.
         </p>
       </section>
 
       <section class="panel result-panel">
         <div class="panel-heading">
-          <p class="eyebrow">Response</p>
-          <h2>Live API output</h2>
+          <p class="eyebrow">Respuesta</p>
+          <h2>Salida en vivo de las APIs</h2>
         </div>
         <div id="flash" class="flash" hidden></div>
-        <pre id="responseOutput" class="response">(results will appear here)</pre>
+        <pre id="responseOutput" class="response">(aqui aparecerán los resultados)</pre>
       </section>
 
       <section class="panel quick-panel">
         <div class="panel-heading">
-          <p class="eyebrow">Playbook</p>
-          <h2>Suggested checks</h2>
+          <p class="eyebrow">Guía Rápida</p>
+          <h2>Pruebas sugeridas</h2>
         </div>
         <ul class="quick-list">
-          <li>Generate a demo JWT first if you want to use the default authenticated mode.</li>
-          <li>Use the default 3x2 matrix to confirm the full Go -> Node flow.</li>
-          <li>Try <code>[[1,2,3],[4,5,6]]</code> to see QR validation reject wide matrices.</li>
-          <li>Switch to rotation when you want to demo the optional interpretation of the prompt.</li>
+          <li>Genera primero un JWT demo si quieres usar el modo autenticado por defecto.</li>
+          <li>Usa la matriz 3x2 por defecto para confirmar el flujo completo Go -> Node.</li>
+          <li>Prueba <code>[[1,2,3],[4,5,6]]</code> para ver cómo QR rechaza matrices anchas.</li>
+          <li>Usa rotación cuando quieras demostrar la interpretación opcional del enunciado.</li>
         </ul>
       </section>
     </main>
@@ -186,10 +186,10 @@ async function generateDemoToken() {
     }
 
     setResponse(payload);
-    showFlash("success", `Demo JWT loaded. Expires at ${payload.expiresAt}.`);
+    showFlash("success", `JWT demo cargado. Expira en ${payload.expiresAt}.`);
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Token generation failed");
+    showFlash("error", error instanceof Error ? error.message : "Falló la generación del token");
   }
 }
 
@@ -204,10 +204,10 @@ async function runAnalyze() {
 
     const payload = await parseJsonResponse<Record<string, unknown>>(response);
     setResponse(payload);
-    showFlash("success", "QR factorization and statistics completed.");
+    showFlash("success", "Factorización QR y estadísticas completadas.");
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Unexpected error");
+    showFlash("error", error instanceof Error ? error.message : "Error inesperado");
   }
 }
 
@@ -222,10 +222,10 @@ async function runRotate(direction: "clockwise" | "counterclockwise") {
 
     const payload = await parseJsonResponse<Record<string, unknown>>(response);
     setResponse(payload);
-    showFlash("success", `Rotation completed (${direction}).`);
+    showFlash("success", `Rotación completada (${direction}).`);
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Unexpected error");
+    showFlash("error", error instanceof Error ? error.message : "Error inesperado");
   }
 }
 
@@ -246,7 +246,7 @@ async function updateHealthCard(selector: string, url: string): Promise<ServiceH
     return payload;
   } catch (error) {
     card.dataset.state = "error";
-    const message = error instanceof Error ? error.message : "Unavailable";
+    const message = error instanceof Error ? error.message : "No disponible";
     if (strong) {
       strong.textContent = message;
     }
@@ -265,10 +265,10 @@ async function refreshHealth() {
       goApi: goHealth,
       nodeApi: nodeHealth,
     });
-    showFlash("success", "Health status refreshed.");
+    showFlash("success", "Estado de salud actualizado.");
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Health check failed");
+    showFlash("error", error instanceof Error ? error.message : "Falló la verificación de salud");
   }
 }
 
