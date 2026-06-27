@@ -62,6 +62,7 @@ const nodeApiBase = resolveApiBase(
 );
 
 const app = document.querySelector<HTMLDivElement>("#app");
+const defaultResponseMessage = "(aqui apareceran los resultados)";
 
 if (!app) {
   throw new Error("App root not found");
@@ -75,7 +76,7 @@ app.innerHTML = `
         <h1>Laboratorio de Matrices</h1>
         <p class="lede">
           Cliente web para probar la factorizacion QR, las estadisticas, la rotacion
-          y las peticiones autenticadas sin salir de localhost.
+          y las peticiones autenticadas desde una sola pantalla.
         </p>
       </div>
       <div class="hero-panel">
@@ -130,7 +131,7 @@ app.innerHTML = `
           <h2>Salida en vivo de las APIs</h2>
         </div>
         <div id="flash" class="flash" hidden></div>
-        <pre id="responseOutput" class="response">(aqui apareceran los resultados)</pre>
+        <pre id="responseOutput" class="response">${defaultResponseMessage}</pre>
       </section>
 
       <section class="panel quick-panel">
@@ -170,6 +171,16 @@ function showFlash(kind: "success" | "error", message: string) {
   flash.textContent = message;
 }
 
+function clearFlash() {
+  if (!flash) {
+    return;
+  }
+
+  flash.hidden = true;
+  flash.className = "flash";
+  flash.textContent = "";
+}
+
 function setResponse(value: unknown) {
   if (!responseOutput) {
     return;
@@ -202,6 +213,18 @@ function buildHeaders(): HeadersInit {
   }
 
   return headers;
+}
+
+function normalizeErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.message.includes("Failed to fetch")) {
+      return "No se pudo conectar con la API desde este navegador. Si usas Brave o un bloqueador, desactivalo para este sitio y vuelve a intentar.";
+    }
+
+    return error.message;
+  }
+
+  return "Ocurrio un error inesperado.";
 }
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
@@ -237,8 +260,9 @@ async function generateDemoToken() {
     setResponse(formatDemoTokenResponse(payload));
     showFlash("success", `JWT demo cargado. Expira en ${payload.expiresInSeconds} segundos.`);
   } catch (error) {
-    setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Fallo la generacion del token");
+    const message = normalizeErrorMessage(error);
+    setResponse({ error: message });
+    showFlash("error", message);
   }
 }
 
@@ -255,8 +279,9 @@ async function runAnalyze() {
     setResponse(payload);
     showFlash("success", "Factorizacion QR y estadisticas completadas.");
   } catch (error) {
-    setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Error inesperado");
+    const message = normalizeErrorMessage(error);
+    setResponse({ error: message });
+    showFlash("error", message);
   }
 }
 
@@ -273,8 +298,9 @@ async function runRotate(direction: "clockwise" | "counterclockwise") {
     setResponse(payload);
     showFlash("success", `Rotacion completada (${direction}).`);
   } catch (error) {
-    setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Error inesperado");
+    const message = normalizeErrorMessage(error);
+    setResponse({ error: message });
+    showFlash("error", message);
   }
 }
 
@@ -295,9 +321,9 @@ async function updateHealthCard(selector: string, url: string): Promise<ServiceH
     return payload;
   } catch (error) {
     card.dataset.state = "error";
-    const message = error instanceof Error ? error.message : "No disponible";
+    const message = normalizeErrorMessage(error);
     if (strong) {
-      strong.textContent = message;
+      strong.textContent = "Bloqueado o no disponible";
     }
     throw new Error(message);
   }
@@ -316,8 +342,9 @@ async function refreshHealth() {
     });
     showFlash("success", "Estado de salud actualizado.");
   } catch (error) {
-    setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Fallo la verificacion de salud");
+    const message = normalizeErrorMessage(error);
+    setResponse({ error: message });
+    showFlash("error", message);
   }
 }
 
@@ -345,7 +372,10 @@ clearTokenButton?.addEventListener("click", () => {
   if (jwtTokenInput) {
     jwtTokenInput.value = "";
   }
-  showFlash("success", "Token limpiado.");
+  clearFlash();
+  setResponse({
+    mensaje: "Token limpiado. Puedes generar otro JWT demo o pegar uno nuevo.",
+  });
 });
 
 void refreshHealth();
