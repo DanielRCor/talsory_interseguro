@@ -13,7 +13,7 @@ func main() {
 	cfg := config.Load()
 	statisticsClient := client.NewStatisticsClient(cfg.NodeAPIURL, &http.Client{
 		Timeout: cfg.HTTPClientTimeout,
-	})
+	}, cfg.JWTSecret)
 
 	app := httpapi.NewApp(httpapi.AppDependencies{
 		Config:           cfg,

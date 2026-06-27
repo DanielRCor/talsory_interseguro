@@ -16,6 +16,8 @@ Open:
 http://localhost:5173
 ```
 
+Use the `Generate Demo JWT` button before calling the protected QR or rotation actions.
+
 ## Go API Health
 
 ```bash
@@ -121,15 +123,15 @@ curl -X POST http://localhost:8080/api/v1/matrix/rotate \
 }
 ```
 
-## Optional JWT Example
+## JWT Example
 
 Generate a local token:
 
 ```bash
-node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'demo-user'}, 'change-me-only-if-auth-enabled', {algorithm:'HS256'}))"
+curl -X POST http://localhost:8080/auth/demo-token
 ```
 
-Use it against either protected API when `ENABLE_AUTH=true`:
+Use it against either protected API:
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/statistics \

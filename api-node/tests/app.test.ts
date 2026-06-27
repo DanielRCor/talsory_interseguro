@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { createApp } from "../src/app";
 
 describe("node-statistics-api", () => {
-  const app = createApp();
+  const app = createApp({ enableAuth: false });
 
   it("returns health status", async () => {
     const response = await request(app).get("/health");

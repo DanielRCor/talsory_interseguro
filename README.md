@@ -8,7 +8,7 @@ This repository implements the Interseguro coding challenge with two small backe
 
 Optional extensions implemented:
 
-- JWT protection for `/api/v1/*` routes in both services when `ENABLE_AUTH=true`
+- JWT protection for `/api/v1/*` routes in both services, enabled by default
 - Matrix rotation helper endpoint in the Go API: `POST /api/v1/matrix/rotate`
 - Optional frontend to exercise QR, rotation, health checks, and JWT-protected requests
 
@@ -49,7 +49,7 @@ GO_API_PORT=8080
 NODE_API_PORT=3000
 NODE_API_URL=http://api-node:3000
 HTTP_CLIENT_TIMEOUT_MS=3000
-ENABLE_AUTH=false
+ENABLE_AUTH=true
 JWT_SECRET=change-me-only-if-auth-enabled
 ```
 
@@ -87,6 +87,8 @@ npm run dev
 Frontend URL:
 
 - Frontend: `http://localhost:5173`
+
+The frontend includes a `Generate Demo JWT` button that requests a local token from the Go API and fills the JWT field automatically.
 
 ## Docker Run
 
@@ -134,12 +136,12 @@ curl -X POST http://localhost:8080/api/v1/matrix/rotate \
   -d '{"matrix":[[1,2,3],[4,5,6]],"direction":"counterclockwise"}'
 ```
 
-### Optional JWT flow
+### JWT flow
 
-Generate a local test token:
+Generate a local demo token:
 
 ```bash
-node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'demo-user'}, 'change-me-only-if-auth-enabled', {algorithm:'HS256'}))"
+curl -X POST http://localhost:8080/auth/demo-token
 ```
 
 Then call protected routes with:
@@ -163,7 +165,7 @@ curl -X POST http://localhost:8080/api/v1/qr/analyze \
 
 - The QR implementation only supports matrices with `rows >= columns`.
 - Linearly dependent columns are rejected instead of using a rank-deficient decomposition strategy.
-- JWT is implemented but disabled by default to preserve the simple local developer flow.
+- JWT is enabled by default in the current local setup, so protected API routes expect a bearer token unless you explicitly set `ENABLE_AUTH=false`.
 
 ## Documentation
 

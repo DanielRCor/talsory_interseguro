@@ -14,6 +14,7 @@ import (
 
 func TestAnalyzeHandler(t *testing.T) {
 	cfg := config.Load()
+	cfg.EnableAuth = false
 	app := NewApp(AppDependencies{
 		Config: cfg,
 		StatisticsClient: NewStubStatisticsClient(client.StatisticsResponse{
@@ -49,8 +50,10 @@ func TestAnalyzeHandler(t *testing.T) {
 }
 
 func TestAnalyzeHandlerValidationError(t *testing.T) {
+	cfg := config.Load()
+	cfg.EnableAuth = false
 	app := NewApp(AppDependencies{
-		Config:           config.Load(),
+		Config:           cfg,
 		StatisticsClient: NewStubStatisticsClient(client.StatisticsResponse{}, nil),
 	})
 
@@ -68,8 +71,10 @@ func TestAnalyzeHandlerValidationError(t *testing.T) {
 }
 
 func TestAnalyzeHandlerBadGateway(t *testing.T) {
+	cfg := config.Load()
+	cfg.EnableAuth = false
 	app := NewApp(AppDependencies{
-		Config:           config.Load(),
+		Config:           cfg,
 		StatisticsClient: NewStubStatisticsClient(client.StatisticsResponse{}, fmt.Errorf("node unavailable")),
 	})
 
@@ -87,8 +92,10 @@ func TestAnalyzeHandlerBadGateway(t *testing.T) {
 }
 
 func TestRotateHandler(t *testing.T) {
+	cfg := config.Load()
+	cfg.EnableAuth = false
 	app := NewApp(AppDependencies{
-		Config:           config.Load(),
+		Config:           cfg,
 		StatisticsClient: NewStubStatisticsClient(client.StatisticsResponse{}, nil),
 	})
 
@@ -168,6 +175,38 @@ func TestAnalyzeHandlerAcceptsJWTWhenEnabled(t *testing.T) {
 
 	if response.StatusCode != 200 {
 		t.Fatalf("expected status 200, got %d", response.StatusCode)
+	}
+}
+
+func TestDemoTokenEndpoint(t *testing.T) {
+	cfg := config.Load()
+	cfg.EnableAuth = true
+	cfg.JWTSecret = "test-secret"
+
+	app := NewApp(AppDependencies{
+		Config:           cfg,
+		StatisticsClient: NewStubStatisticsClient(client.StatisticsResponse{}, nil),
+	})
+
+	request := httptest.NewRequest("POST", "/auth/demo-token", nil)
+	response, err := app.Test(request)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if response.StatusCode != 200 {
+		t.Fatalf("expected status 200, got %d", response.StatusCode)
+	}
+
+	var payload struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if payload.Token == "" {
+		t.Fatalf("expected token in response")
 	}
 }
 

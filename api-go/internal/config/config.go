@@ -45,7 +45,10 @@ func Load() Config {
 		nodeAPIURL = defaultNodeAPIURL
 	}
 
-	enableAuth := os.Getenv("ENABLE_AUTH") == "true"
+	enableAuth := true
+	if rawEnableAuth := os.Getenv("ENABLE_AUTH"); rawEnableAuth != "" {
+		enableAuth = rawEnableAuth == "true"
+	}
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "change-me-only-if-auth-enabled"

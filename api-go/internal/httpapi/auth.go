@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"strings"
+	"time"
 
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/config"
 	"github.com/gofiber/fiber/v2"
@@ -25,4 +26,21 @@ func authMiddleware(cfg config.Config) fiber.Handler {
 
 		return ctx.Next()
 	}
+}
+
+func issueDemoToken(cfg config.Config) (string, time.Time, error) {
+	expiresAt := time.Now().Add(12 * time.Hour)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "demo-user",
+		"iss": "go-qr-api",
+		"aud": "interseguro-challenge",
+		"exp": expiresAt.Unix(),
+	})
+
+	signed, err := token.SignedString([]byte(cfg.JWTSecret))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return signed, expiresAt, nil
 }

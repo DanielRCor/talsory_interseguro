@@ -30,6 +30,7 @@
 - Go matrix rotation behavior
 - Go HTTP success, validation failure, and Node downstream failure handling
 - Go HTTP JWT enforcement behavior
+- Demo JWT issuance from the Go API
 - Local Go -> Node integration with a real `POST /api/v1/qr/analyze` request
 - Frontend rendering, health probes, and QR action flow against the live local APIs
 
@@ -40,9 +41,10 @@
 3. TypeScript 6 raised a deprecation warning for module resolution, so `ignoreDeprecations` was added to keep builds green.
 4. The first counterclockwise rotation implementation wrote into uninitialized rows, which caused a panic in Go tests and was corrected by preallocating the rotated matrix.
 5. Browser-based frontend requests needed CORS support, so permissive demo-friendly middleware was added to both APIs.
+6. JWT was upgraded from a dormant optional field into a complete demo flow with server-issued tokens and frontend support.
 
 ## Remaining Risks
 
 - The Node dependency tree reports moderate audit findings from transitive dev dependencies.
 - The QR implementation rejects rank-deficient matrices instead of computing a more advanced decomposition.
-- JWT is implemented but disabled by default to keep local startup simple.
+- JWT is enabled by default in the current setup, so authenticated calls need a bearer token unless `ENABLE_AUTH=false`.

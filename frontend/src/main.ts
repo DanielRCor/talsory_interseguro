@@ -7,6 +7,12 @@ type ServiceHealth = {
   service: string;
 };
 
+type DemoTokenResponse = {
+  token: string;
+  expiresAt: string;
+  enabled: boolean;
+};
+
 type ApiError = {
   error?: {
     code?: string;
@@ -32,7 +38,7 @@ app.innerHTML = `
         <h1>Matrix Lab</h1>
         <p class="lede">
           A focused browser client for testing QR factorization, downstream statistics,
-          and the optional rotation flow without leaving localhost.
+          rotation, and authenticated requests without leaving localhost.
         </p>
       </div>
       <div class="hero-panel">
@@ -55,9 +61,13 @@ app.innerHTML = `
         </div>
 
         <label class="field">
-          <span>JWT token (optional)</span>
-          <input id="jwtToken" type="text" placeholder="Paste bearer token if ENABLE_AUTH=true" />
+          <span>JWT token</span>
+          <input id="jwtToken" type="text" placeholder="Use Generate Demo JWT or paste your own bearer token" />
         </label>
+
+        <div class="action-grid compact">
+          <button id="generateTokenButton" class="action secondary">Generate Demo JWT</button>
+        </div>
 
         <label class="field">
           <span>Matrix JSON</span>
@@ -91,9 +101,9 @@ app.innerHTML = `
           <h2>Suggested checks</h2>
         </div>
         <ul class="quick-list">
-          <li>Use the default 3x2 matrix to confirm the full Go → Node flow.</li>
+          <li>Generate a demo JWT first if you want to use the default authenticated mode.</li>
+          <li>Use the default 3x2 matrix to confirm the full Go -> Node flow.</li>
           <li>Try <code>[[1,2,3],[4,5,6]]</code> to see QR validation reject wide matrices.</li>
-          <li>Enable JWT in both APIs and paste the token above to test protected routes.</li>
           <li>Switch to rotation when you want to demo the optional interpretation of the prompt.</li>
         </ul>
       </section>
@@ -109,6 +119,7 @@ const analyzeButton = document.querySelector<HTMLButtonElement>("#analyzeButton"
 const rotateClockwiseButton = document.querySelector<HTMLButtonElement>("#rotateClockwiseButton");
 const rotateCounterButton = document.querySelector<HTMLButtonElement>("#rotateCounterButton");
 const refreshHealthButton = document.querySelector<HTMLButtonElement>("#refreshHealthButton");
+const generateTokenButton = document.querySelector<HTMLButtonElement>("#generateTokenButton");
 
 function showFlash(kind: "success" | "error", message: string) {
   if (!flash) {
@@ -163,6 +174,25 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   return payload;
 }
 
+async function generateDemoToken() {
+  try {
+    const response = await fetch(`${goApiBase}/auth/demo-token`, {
+      method: "POST",
+    });
+
+    const payload = await parseJsonResponse<DemoTokenResponse>(response);
+    if (jwtTokenInput) {
+      jwtTokenInput.value = payload.token;
+    }
+
+    setResponse(payload);
+    showFlash("success", `Demo JWT loaded. Expires at ${payload.expiresAt}.`);
+  } catch (error) {
+    setResponse({ error: String(error) });
+    showFlash("error", error instanceof Error ? error.message : "Token generation failed");
+  }
+}
+
 async function runAnalyze() {
   try {
     const matrix = parseMatrix();
@@ -199,10 +229,10 @@ async function runRotate(direction: "clockwise" | "counterclockwise") {
   }
 }
 
-async function updateHealthCard(selector: string, url: string) {
+async function updateHealthCard(selector: string, url: string): Promise<ServiceHealth> {
   const card = document.querySelector<HTMLElement>(selector);
   if (!card) {
-    return;
+    throw new Error(`Health card not found for ${selector}`);
   }
 
   const strong = card.querySelector("strong");
@@ -211,21 +241,35 @@ async function updateHealthCard(selector: string, url: string) {
     const payload = await parseJsonResponse<ServiceHealth>(response);
     card.dataset.state = "ok";
     if (strong) {
-      strong.textContent = `${payload.status} · ${payload.service}`;
+      strong.textContent = `${payload.status} - ${payload.service}`;
     }
+    return payload;
   } catch (error) {
     card.dataset.state = "error";
+    const message = error instanceof Error ? error.message : "Unavailable";
     if (strong) {
-      strong.textContent = error instanceof Error ? error.message : "Unavailable";
+      strong.textContent = message;
     }
+    throw new Error(message);
   }
 }
 
 async function refreshHealth() {
-  await Promise.all([
-    updateHealthCard('[data-health="go"]', `${goApiBase}/health`),
-    updateHealthCard('[data-health="node"]', `${nodeApiBase}/health`),
-  ]);
+  try {
+    const [goHealth, nodeHealth] = await Promise.all([
+      updateHealthCard('[data-health="go"]', `${goApiBase}/health`),
+      updateHealthCard('[data-health="node"]', `${nodeApiBase}/health`),
+    ]);
+
+    setResponse({
+      goApi: goHealth,
+      nodeApi: nodeHealth,
+    });
+    showFlash("success", "Health status refreshed.");
+  } catch (error) {
+    setResponse({ error: String(error) });
+    showFlash("error", error instanceof Error ? error.message : "Health check failed");
+  }
 }
 
 analyzeButton?.addEventListener("click", () => {
@@ -242,6 +286,10 @@ rotateCounterButton?.addEventListener("click", () => {
 
 refreshHealthButton?.addEventListener("click", () => {
   void refreshHealth();
+});
+
+generateTokenButton?.addEventListener("click", () => {
+  void generateDemoToken();
 });
 
 void refreshHealth();

@@ -20,7 +20,7 @@ function readBoolean(rawValue: string | undefined, fallback: boolean): boolean {
 
 function resolveOptions(options?: AppOptions): Required<AppOptions> {
   return {
-    enableAuth: options?.enableAuth ?? readBoolean(process.env.ENABLE_AUTH, false),
+    enableAuth: options?.enableAuth ?? readBoolean(process.env.ENABLE_AUTH, true),
     jwtSecret: options?.jwtSecret ?? process.env.JWT_SECRET ?? "change-me-only-if-auth-enabled",
   };
 }

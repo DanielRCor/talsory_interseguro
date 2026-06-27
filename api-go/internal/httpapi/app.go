@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/client"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/config"
@@ -48,6 +49,19 @@ func NewApp(dependencies AppDependencies) *fiber.App {
 		return ctx.JSON(fiber.Map{
 			"status":  "ok",
 			"service": "go-qr-api",
+		})
+	})
+
+	app.Post("/auth/demo-token", func(ctx *fiber.Ctx) error {
+		token, expiresAt, err := issueDemoToken(dependencies.Config)
+		if err != nil {
+			return writeError(ctx, fiber.StatusInternalServerError, "TOKEN_ISSUE_ERROR", "Failed to issue demo token", []string{err.Error()})
+		}
+
+		return ctx.JSON(fiber.Map{
+			"token":     token,
+			"expiresAt": expiresAt.Format(time.RFC3339),
+			"enabled":   dependencies.Config.EnableAuth,
 		})
 	})
 

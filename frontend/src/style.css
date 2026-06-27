@@ -210,6 +210,11 @@ h2 {
   gap: 12px;
 }
 
+.action-grid.compact {
+  grid-template-columns: 1fr;
+  margin-bottom: 16px;
+}
+
 .action {
   border: none;
   border-radius: 999px;

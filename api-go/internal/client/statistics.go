@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type StatisticsRequest struct {
@@ -31,12 +34,14 @@ type StatisticsCalculator interface {
 type StatisticsClient struct {
 	baseURL    string
 	httpClient *http.Client
+	jwtSecret  string
 }
 
-func NewStatisticsClient(baseURL string, httpClient *http.Client) *StatisticsClient {
+func NewStatisticsClient(baseURL string, httpClient *http.Client, jwtSecret string) *StatisticsClient {
 	return &StatisticsClient{
 		baseURL:    baseURL,
 		httpClient: httpClient,
+		jwtSecret:  jwtSecret,
 	}
 }
 
@@ -56,6 +61,14 @@ func (c *StatisticsClient) Calculate(ctx context.Context, q, r [][]float64) (Sta
 	}
 	request.Header.Set("Content-Type", "application/json")
 
+	if c.jwtSecret != "" {
+		token, err := c.issueServiceToken()
+		if err != nil {
+			return StatisticsResponse{}, fmt.Errorf("issue service jwt: %w", err)
+		}
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
+
 	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return StatisticsResponse{}, fmt.Errorf("call node statistics api: %w", err)
@@ -72,4 +85,15 @@ func (c *StatisticsClient) Calculate(ctx context.Context, q, r [][]float64) (Sta
 	}
 
 	return statistics, nil
+}
+
+func (c *StatisticsClient) issueServiceToken() (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "go-api-service",
+		"iss": "go-qr-api",
+		"aud": "node-statistics-api",
+		"exp": time.Now().Add(5 * time.Minute).Unix(),
+	})
+
+	return token.SignedString([]byte(c.jwtSecret))
 }
