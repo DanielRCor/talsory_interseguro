@@ -1,0 +1,24 @@
+services:
+  api-node:
+    build:
+      context: ./api-node
+    environment:
+      NODE_API_PORT: ${NODE_API_PORT:-3000}
+      ENABLE_AUTH: ${ENABLE_AUTH:-false}
+      JWT_SECRET: ${JWT_SECRET:-change-me-only-if-auth-enabled}
+    ports:
+      - "${NODE_API_PORT:-3000}:3000"
+
+  api-go:
+    build:
+      context: ./api-go
+    environment:
+      GO_API_PORT: ${GO_API_PORT:-8080}
+      NODE_API_URL: ${NODE_API_URL:-http://api-node:3000}
+      HTTP_CLIENT_TIMEOUT_MS: ${HTTP_CLIENT_TIMEOUT_MS:-3000}
+      ENABLE_AUTH: ${ENABLE_AUTH:-false}
+      JWT_SECRET: ${JWT_SECRET:-change-me-only-if-auth-enabled}
+    ports:
+      - "${GO_API_PORT:-8080}:8080"
+    depends_on:
+      - api-node
