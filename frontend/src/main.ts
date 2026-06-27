@@ -9,7 +9,9 @@ type ServiceHealth = {
 
 type DemoTokenResponse = {
   token: string;
+  tokenPreview: string;
   expiresAt: string;
+  expiresInSeconds: number;
   enabled: boolean;
 };
 
@@ -34,10 +36,10 @@ app.innerHTML = `
   <div class="shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Prueba Técnica Interseguro</p>
+        <p class="eyebrow">Prueba Tecnica Interseguro</p>
         <h1>Laboratorio de Matrices</h1>
         <p class="lede">
-          Cliente web para probar la factorización QR, las estadísticas, la rotación
+          Cliente web para probar la factorizacion QR, las estadisticas, la rotacion
           y las peticiones autenticadas sin salir de localhost.
         </p>
       </div>
@@ -67,6 +69,7 @@ app.innerHTML = `
 
         <div class="action-grid compact">
           <button id="generateTokenButton" class="action secondary">Generar JWT Demo</button>
+          <button id="clearTokenButton" class="action ghost">Limpiar Token</button>
         </div>
 
         <label class="field">
@@ -75,14 +78,14 @@ app.innerHTML = `
         </label>
 
         <div class="action-grid">
-          <button id="analyzeButton" class="action primary">Ejecutar QR + Estadísticas</button>
+          <button id="analyzeButton" class="action primary">Ejecutar QR + Estadisticas</button>
           <button id="rotateClockwiseButton" class="action secondary">Rotar a la Derecha</button>
           <button id="rotateCounterButton" class="action secondary">Rotar a la Izquierda</button>
           <button id="refreshHealthButton" class="action ghost">Actualizar Estado</button>
         </div>
 
         <p class="hint">
-          QR requiere <code>filas &gt;= columnas</code>. La rotación acepta cualquier matriz rectangular.
+          QR requiere <code>filas &gt;= columnas</code>. La rotacion acepta cualquier matriz rectangular.
         </p>
       </section>
 
@@ -92,19 +95,19 @@ app.innerHTML = `
           <h2>Salida en vivo de las APIs</h2>
         </div>
         <div id="flash" class="flash" hidden></div>
-        <pre id="responseOutput" class="response">(aqui aparecerán los resultados)</pre>
+        <pre id="responseOutput" class="response">(aqui apareceran los resultados)</pre>
       </section>
 
       <section class="panel quick-panel">
         <div class="panel-heading">
-          <p class="eyebrow">Guía Rápida</p>
+          <p class="eyebrow">Guia Rapida</p>
           <h2>Pruebas sugeridas</h2>
         </div>
         <ul class="quick-list">
           <li>Genera primero un JWT demo si quieres usar el modo autenticado por defecto.</li>
           <li>Usa la matriz 3x2 por defecto para confirmar el flujo completo Go -> Node.</li>
-          <li>Prueba <code>[[1,2,3],[4,5,6]]</code> para ver cómo QR rechaza matrices anchas.</li>
-          <li>Usa rotación cuando quieras demostrar la interpretación opcional del enunciado.</li>
+          <li>Prueba <code>[[1,2,3],[4,5,6]]</code> para ver como QR rechaza matrices anchas.</li>
+          <li>Usa rotacion cuando quieras demostrar la interpretacion opcional del enunciado.</li>
         </ul>
       </section>
     </main>
@@ -120,6 +123,7 @@ const rotateClockwiseButton = document.querySelector<HTMLButtonElement>("#rotate
 const rotateCounterButton = document.querySelector<HTMLButtonElement>("#rotateCounterButton");
 const refreshHealthButton = document.querySelector<HTMLButtonElement>("#refreshHealthButton");
 const generateTokenButton = document.querySelector<HTMLButtonElement>("#generateTokenButton");
+const clearTokenButton = document.querySelector<HTMLButtonElement>("#clearTokenButton");
 
 function showFlash(kind: "success" | "error", message: string) {
   if (!flash) {
@@ -174,6 +178,16 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   return payload;
 }
 
+function formatDemoTokenResponse(payload: DemoTokenResponse) {
+  return {
+    autenticacionActiva: payload.enabled,
+    expiraEnSegundos: payload.expiresInSeconds,
+    expiraEn: payload.expiresAt,
+    tokenPreview: payload.tokenPreview,
+    nota: "El JWT completo ya fue cargado en el campo superior.",
+  };
+}
+
 async function generateDemoToken() {
   try {
     const response = await fetch(`${goApiBase}/auth/demo-token`, {
@@ -185,11 +199,11 @@ async function generateDemoToken() {
       jwtTokenInput.value = payload.token;
     }
 
-    setResponse(payload);
-    showFlash("success", `JWT demo cargado. Expira en ${payload.expiresAt}.`);
+    setResponse(formatDemoTokenResponse(payload));
+    showFlash("success", `JWT demo cargado. Expira en ${payload.expiresInSeconds} segundos.`);
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Falló la generación del token");
+    showFlash("error", error instanceof Error ? error.message : "Fallo la generacion del token");
   }
 }
 
@@ -204,7 +218,7 @@ async function runAnalyze() {
 
     const payload = await parseJsonResponse<Record<string, unknown>>(response);
     setResponse(payload);
-    showFlash("success", "Factorización QR y estadísticas completadas.");
+    showFlash("success", "Factorizacion QR y estadisticas completadas.");
   } catch (error) {
     setResponse({ error: String(error) });
     showFlash("error", error instanceof Error ? error.message : "Error inesperado");
@@ -222,7 +236,7 @@ async function runRotate(direction: "clockwise" | "counterclockwise") {
 
     const payload = await parseJsonResponse<Record<string, unknown>>(response);
     setResponse(payload);
-    showFlash("success", `Rotación completada (${direction}).`);
+    showFlash("success", `Rotacion completada (${direction}).`);
   } catch (error) {
     setResponse({ error: String(error) });
     showFlash("error", error instanceof Error ? error.message : "Error inesperado");
@@ -268,7 +282,7 @@ async function refreshHealth() {
     showFlash("success", "Estado de salud actualizado.");
   } catch (error) {
     setResponse({ error: String(error) });
-    showFlash("error", error instanceof Error ? error.message : "Falló la verificación de salud");
+    showFlash("error", error instanceof Error ? error.message : "Fallo la verificacion de salud");
   }
 }
 
@@ -290,6 +304,13 @@ refreshHealthButton?.addEventListener("click", () => {
 
 generateTokenButton?.addEventListener("click", () => {
   void generateDemoToken();
+});
+
+clearTokenButton?.addEventListener("click", () => {
+  if (jwtTokenInput) {
+    jwtTokenInput.value = "";
+  }
+  showFlash("success", "Token limpiado.");
 });
 
 void refreshHealth();

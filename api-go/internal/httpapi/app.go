@@ -59,9 +59,11 @@ func NewApp(dependencies AppDependencies) *fiber.App {
 		}
 
 		return ctx.JSON(fiber.Map{
-			"token":     token,
-			"expiresAt": expiresAt.Format(time.RFC3339),
-			"enabled":   dependencies.Config.EnableAuth,
+			"token":            token,
+			"tokenPreview":     previewToken(token),
+			"expiresAt":        expiresAt.Format(time.RFC3339),
+			"expiresInSeconds": int(demoTokenTTL.Seconds()),
+			"enabled":          dependencies.Config.EnableAuth,
 		})
 	})
 
@@ -166,4 +168,12 @@ func (s stubStatisticsClient) Calculate(_ context.Context, _ [][]float64, _ [][]
 
 func NewStubStatisticsClient(response client.StatisticsResponse, err error) client.StatisticsCalculator {
 	return stubStatisticsClient{response: response, err: err}
+}
+
+func previewToken(token string) string {
+	if len(token) <= 24 {
+		return token
+	}
+
+	return token[:12] + "..." + token[len(token)-12:]
 }

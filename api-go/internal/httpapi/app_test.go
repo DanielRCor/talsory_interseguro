@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/client"
 	"github.com/DanielRCor/talsory_interseguro/api-go/internal/config"
@@ -199,7 +200,9 @@ func TestDemoTokenEndpoint(t *testing.T) {
 	}
 
 	var payload struct {
-		Token string `json:"token"`
+		Token            string `json:"token"`
+		TokenPreview     string `json:"tokenPreview"`
+		ExpiresInSeconds int    `json:"expiresInSeconds"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
 		t.Fatalf("decode response: %v", err)
@@ -207,6 +210,36 @@ func TestDemoTokenEndpoint(t *testing.T) {
 
 	if payload.Token == "" {
 		t.Fatalf("expected token in response")
+	}
+
+	if payload.TokenPreview == "" {
+		t.Fatalf("expected token preview in response")
+	}
+
+	if payload.ExpiresInSeconds != 120 {
+		t.Fatalf("expected 120 seconds expiry, got %d", payload.ExpiresInSeconds)
+	}
+
+	parsedToken, err := jwt.Parse(payload.Token, func(token *jwt.Token) (any, error) {
+		return []byte(cfg.JWTSecret), nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil {
+		t.Fatalf("parse token: %v", err)
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatalf("expected map claims")
+	}
+
+	expFloat, ok := claims["exp"].(float64)
+	if !ok {
+		t.Fatalf("expected exp claim")
+	}
+
+	expiresAt := time.Unix(int64(expFloat), 0)
+	if expiresAt.Before(time.Now().Add(90*time.Second)) || expiresAt.After(time.Now().Add(3*time.Minute)) {
+		t.Fatalf("expected token to expire near 2 minutes, got %v", expiresAt)
 	}
 }
 

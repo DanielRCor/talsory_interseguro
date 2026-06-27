@@ -9,6 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const demoTokenTTL = 2 * time.Minute
+
 func authMiddleware(cfg config.Config) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		header := ctx.Get("Authorization")
@@ -29,7 +31,7 @@ func authMiddleware(cfg config.Config) fiber.Handler {
 }
 
 func issueDemoToken(cfg config.Config) (string, time.Time, error) {
-	expiresAt := time.Now().Add(12 * time.Hour)
+	expiresAt := time.Now().Add(demoTokenTTL)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": "demo-user",
 		"iss": "go-qr-api",

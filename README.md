@@ -89,6 +89,7 @@ Frontend URL:
 - Frontend: `http://localhost:5173`
 
 The frontend includes a `Generate Demo JWT` button that requests a local token from the Go API and fills the JWT field automatically.
+That demo token now expires after 2 minutes.
 
 ## Docker Run
 
@@ -143,6 +144,8 @@ Generate a local demo token:
 ```bash
 curl -X POST http://localhost:8080/auth/demo-token
 ```
+
+The response includes the expiration time and the frontend shows a shorter preview instead of dumping the full token in the response panel.
 
 Then call protected routes with:
 

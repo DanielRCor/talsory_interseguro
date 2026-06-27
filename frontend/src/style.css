@@ -193,6 +193,10 @@ h2 {
   padding: 14px 16px;
 }
 
+#jwtToken {
+  font-family: var(--mono);
+}
+
 .field input:focus,
 .field textarea:focus {
   outline: 2px solid rgba(196, 81, 45, 0.18);
@@ -283,6 +287,9 @@ h2 {
   background: #201b1b;
   color: #f4efe8;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .quick-list {

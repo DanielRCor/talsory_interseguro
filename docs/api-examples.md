@@ -17,6 +17,7 @@ http://localhost:5173
 ```
 
 Use the `Generate Demo JWT` button before calling the protected QR or rotation actions.
+The demo token expires after 2 minutes.
 
 ## Go API Health
 
